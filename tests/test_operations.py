@@ -113,7 +113,7 @@ def p(x):
 
 
 @mock_streams('stdout')
-@with_patched_object(sys.modules['__builtin__'], 'raw_input', p)
+@with_patched_input(p)
 def test_prompt_appends_space():
     """
     prompt() appends a single space when no default is given
@@ -124,7 +124,7 @@ def test_prompt_appends_space():
 
 
 @mock_streams('stdout')
-@with_patched_object(sys.modules['__builtin__'], 'raw_input', p)
+@with_patched_input(p)
 def test_prompt_with_default():
     """
     prompt() appends given default value plus one space on either side
@@ -264,6 +264,32 @@ class TestCombineStderr(FabricTest):
         r = run("both_streams", combine_stderr=False)
         eq_("stdout", r.stdout)
         eq_("stderr", r.stderr)
+
+
+class TestQuietAndWarnKwargs(FabricTest):
+    @server(responses={'wat': ["", "", 1]})
+    def test_quiet_implies_warn_only(self):
+        # Would raise an exception if warn_only was False
+        eq_(run("wat", quiet=True).failed, True)
+
+    @server()
+    @mock_streams('both')
+    def test_quiet_implies_hide_everything(self):
+        run("ls /", quiet=True)
+        eq_(sys.stdout.getvalue(), "")
+        eq_(sys.stderr.getvalue(), "")
+
+    @server(responses={'hrm': ["", "", 1]})
+    @mock_streams('both')
+    def test_warn_only_is_same_as_settings_warn_only(self):
+        eq_(run("hrm", warn_only=True).failed, True)
+
+    @server()
+    @mock_streams('both')
+    def test_warn_only_does_not_imply_hide_everything(self):
+        run("ls /simple", warn_only=True)
+        assert sys.stdout.getvalue() != ""
+
 
 #
 # get() and put()

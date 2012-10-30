@@ -421,6 +421,25 @@ def char_buffered(pipe):
             termios.tcsetattr(pipe, termios.TCSADRAIN, old_settings)
 
 
+def shell_env(**kw):
+    """
+    Set shell environment variables for wrapped commands.
+
+    For example, the below shows how you might set a ZeroMQ related environment
+    variable when installing a Python ZMQ library::
+
+        with shell_env(ZMQ_DIR='/home/user/local'):
+            run('pip install pyzmq')
+
+    As with `~fabric.context_managers.prefix`, this effectively turns the ``run`` command into::
+
+        $ export ZMQ_DIR='/home/user/local' && pip install pyzmq
+
+    Multiple key-value pairs may be given simultaneously.
+    """
+    return _setenv(shell_env=kw)
+
+
 quiet = lambda: settings(hide('everything'), warn_only=True)
 quiet.__doc__ = """
     Alias to ``settings(hide('everything'), warn_only=True)``.
@@ -438,5 +457,18 @@ quiet.__doc__ = """
     is ignored.
 
     .. seealso::
-        `~fabric.context_managers.hide`, `~fabric.context_managers.settings`
+        :ref:`env.warn_only <warn_only>`,
+        `~fabric.context_managers.settings`,
+        `~fabric.context_managers.hide`
+"""
+
+
+warn_only = lambda: settings(warn_only=True)
+warn_only.__doc__ = """
+    Alias to ``settings(warn_only=True)``.
+
+    .. seealso::
+        :ref:`env.warn_only <warn_only>`,
+        `~fabric.context_managers.settings`,
+        `~fabric.context_managers.quiet`
 """

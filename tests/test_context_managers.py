@@ -1,9 +1,17 @@
 from __future__ import with_statement
 
+import sys
+
 from nose.tools import eq_, ok_
 
 from fabric.state import env, output
-from fabric.context_managers import cd, settings, lcd, hide
+from fabric.context_managers import (cd, settings, lcd, hide, shell_env, quiet,
+    warn_only)
+from fabric.operations import run
+
+from utils import mock_streams, FabricTest
+from server import server
+from StringIO import StringIO
 
 
 #
@@ -131,17 +139,23 @@ def test_settings_clean_revert():
     ok_("inner_only" not in env)
 
 
-from fabric.operations import run
-from fabric.context_managers import quiet
-from utils import mock_streams, FabricTest
-from server import server
-import sys
-from StringIO import StringIO
+#
+# shell_env()
+#
 
-class TestQuiet(FabricTest):
+def test_shell_env():
+    """
+    shell_env() sets the shell_env attribute in the env dict
+    """
+    with shell_env(KEY="value"):
+        eq_(env.shell_env['KEY'], 'value')
+
+    eq_(env.shell_env, {})
+
+class TestQuietAndWarnOnly(FabricTest):
     @server()
     @mock_streams('both')
-    def test_hides_all_output(self):
+    def test_quiet_hides_all_output(self):
         # Sanity test - normally this is not empty
         run("ls /simple")
         ok_(sys.stdout.getvalue())
@@ -158,16 +172,28 @@ class TestQuiet(FabricTest):
         run("ls /simple", quiet=True)
         ok_(not sys.stdout.getvalue())
 
-
     @server(responses={'barf': [
         "this is my stdout",
         "this is my stderr",
         1
     ]})
-    def test_sets_warn_only_to_true(self):
+    def test_quiet_sets_warn_only_to_true(self):
         # Sanity test to ensure environment
         with settings(warn_only=False):
             with quiet():
                 eq_(run("barf").return_code, 1)
             # Kwarg test
             eq_(run("barf", quiet=True).return_code, 1)
+
+    @server(responses={'hrm': ["", "", 1]})
+    @mock_streams('both')
+    def test_warn_only_is_same_as_settings_warn_only(self):
+        with warn_only():
+            eq_(run("hrm").failed, True)
+
+    @server()
+    @mock_streams('both')
+    def test_warn_only_does_not_imply_hide_everything(self):
+        with warn_only():
+            run("ls /simple")
+            assert sys.stdout.getvalue().strip() != ""

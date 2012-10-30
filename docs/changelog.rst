@@ -25,6 +25,29 @@ would have also been included in the 1.2 line.
 Changelog
 =========
 
+* :bug:`693` Fixed edge case where ``abort`` driven failures within parallel
+  tasks could result in a top level exception (a ``KeyError``) regarding error
+  handling. Thanks to Marcin Kuźmiński for the report.
+* :support:`681` Fixed outdated docstring for `~fabric.decorators.runs_once`
+  which claimed it would get run multiple times in parallel mode. That behavior
+  was fixed in an earlier release but the docs were not updated. Thanks to
+  Jan Brauer for the catch.
+* :release:`1.4.3 <2012-07-06>`
+* :release:`1.3.8 <2012-07-06>`
+* :feature:`263` Shell environment variable support for
+  `~fabric.operations.run`/`~fabric.operations.sudo` added in the form of the
+  `~fabric.context_managers.shell_env` context manager. Thanks to Oliver
+  Tonnhofer for the original pull request, and to Kamil Kisiel for the final
+  implementation.
+* :feature:`669` Updates to our Windows compatibility to rely more heavily on
+  cross-platform Python stdlib implementations. Thanks to Alexey Diyan for the
+  patch.
+* :bug:`671` :ref:`reject-unknown-hosts` sometimes resulted in a password
+  prompt instead of an abort. This has been fixed. Thanks to Roy Smith for the
+  report.
+* :bug:`659` Update docs to reflect that `~fabric.operations.local` currently
+  honors :ref:`env.path <env-path>`. Thanks to `@floledermann
+  <https://github.com/floledermann>`_ for the catch.
 * :bug:`652` Show available commands when aborting on invalid command names.
 * :support:`651` Added note about nesting ``with`` statements on Python 2.6+.
   Thanks to Jens Rantil for the patch.
@@ -48,12 +71,13 @@ Changelog
 * :support:`640` (also :issue:`644`) Update packaging manifest so sdist
   tarballs include all necessary test & doc files. Thanks to Mike Gilbert and
   `@Arfrever` for catch & patch.
-* :feature:`627` Added convenient ``quiet`` keyword argument to
-  `~fabric.operations.run`/`~fabric.operations.sudo` (plus a `context manager
-  version <fabric.context_managers.quiet>`) which is an alias for
-  ``settings(hide('everything'), warn_only=True)``. Useful for remote program
-  calls which are expected to fail and whose output doesn't need to be shown to
-  users.
+* :feature:`627` Added convenient ``quiet`` and ``warn_only`` keyword arguments
+  to `~fabric.operations.run`/`~fabric.operations.sudo` which are aliases for
+  ``settings(hide('everything'), warn_only=True)`` and
+  ``settings(warn_only=True)``, respectively. (Also added corresponding
+  `context <fabric.context_managers.quiet>` `managers
+  <fabric.context_managers.warn_only>`.) Useful for remote program calls which
+  are expected to fail and/or whose output doesn't need to be shown to users.
 * :feature:`633` Allow users to turn off host list deduping by setting
   :ref:`env.dedupe_hosts <dedupe_hosts>` to ``False``. This enables running the
   same task multiple times on a single host, which was previously not possible.
